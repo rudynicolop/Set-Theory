@@ -1,0 +1,6 @@
+(coq.theory
+ (name Enderton)
+ (package enderton)
+ (synopsis "Set theory formalizations.")
+ (modules (:standard)))
+(include_subdirs qualified)

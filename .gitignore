@@ -1,3 +1,14 @@
+# Build artifacts
+_build/
+*.exe
+*.install
+.merlin
+
+# Emacs files
+.#*
+\#
+*~
+
 .*.aux
 .*.d
 *.a

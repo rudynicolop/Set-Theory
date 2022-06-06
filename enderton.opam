@@ -1,0 +1,17 @@
+opam-version: "2.0"
+version: "0.1.0"
+synopsis: "Set theory formalizations."
+maintainer: "rnp39@cornell.edu"
+authors: ["Rudy Nicolo Peterson <rnp39@cornell.edu>"]
+homepage: "https://github.com/rudynicolop/Set-Theory"
+dev-repo: "git+https://github.com/rudynicolop/Set-Theory"
+bug-reports: "https://github.com/rudynicolop/Set-Theory/issues"
+build: [
+  ["dune" "build" "-p" name "-j" jobs]
+]
+install: [
+  ["dune" "install"]
+]
+depends: [
+  "coq" {build}
+]
