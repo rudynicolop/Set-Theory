@@ -1,3 +1,5 @@
+Require Import Setoid.
+
 (** * Axiomatic Set Theory. *)
 
 (** Definition of sets. *)
@@ -18,14 +20,14 @@ Parameter empty : set.
 (** Pairing. *)
 Parameter pair : set -> set -> set.
 
-(** Set-union. *)
-Parameter union : set -> set -> set.
-
 (** Power-set. *)
 Parameter power : set -> set.
 
 (** Subset satisfying property. *)
 Parameter comprehension : (set -> Prop) -> set -> set.
+
+(** Abitrary union. *)
+Parameter Union : set -> set.
 End SetDataType.
 
 (** Auxiliary definitions for sets. *)
@@ -33,7 +35,7 @@ Module SetAuxiliary (SetDefinition : SetDataType).
   Import SetDefinition.
   Notation "A '∈' B" := (member A B) (at level 80, no associativity) : type_scope.
   Notation "A '∉' B" := (~ (A ∈ B)) (at level 80, no associativity) : type_scope.
-
+  
   (** The subset relation. *)
   Definition subset (A B : set) : Prop :=
     forall x, x ∈ A -> x ∈ B.
@@ -42,12 +44,16 @@ Module SetAuxiliary (SetDefinition : SetDataType).
 
   Notation "'∅'" := empty (at level 0).
   
-  Notation "⟨ A , B ⟩" := (pair A B) (at level 40, no associativity).
-
-  Notation "A ∪ B" := (union A B) (at level 30, right associativity).
+  Notation "⟨ A , B ⟩" := (pair A B) (no associativity).
 
   Notation "'{{' x '`∈' c '|' P '}}'"
     := (comprehension (fun x => P) c) (no associativity).
+
+  Notation "'⋃'" := Union (at level 0).
+
+  Definition union A B := ⋃ ⟨ A , B ⟩.
+
+  Notation "A ∪ B" := (union A B) (at level 30, right associativity).
 End SetAuxiliary.
 
 (** Axioms of set theory. *)
@@ -64,14 +70,15 @@ Module Type SetAxioms (SetDefinition : SetDataType).
   
   Axiom empty_set : forall x, x ∉ ∅.
   
-  Axiom pairing : forall u v, forall x, x ∈ ⟨ u , v ⟩ <-> x = u \/ x = v.
+  Axiom pairing : forall u v x, x ∈ ⟨ u , v ⟩ <-> x = u \/ x = v.
   
-  Axiom union : forall a b, forall x, x ∈ a ∪ b <-> x ∈ a \/ x ∈ b.
-  
-  Axiom power_set : forall a, forall x, x ∈ power a <-> x ⊆ a.
+  Axiom power_set : forall a x, x ∈ power a <-> x ⊆ a.
 
-  Axiom subset_schema :
-    forall P c x, x ∈ {{ x `∈ c | P x }} <-> P x /\ x ∈ c.
+  Axiom subset_schema : forall P c x,
+      x ∈ {{ x `∈ c | P x }} <-> P x /\ x ∈ c.
+
+  Axiom Union_axiom : forall A x,
+      x ∈ ⋃ A <-> (exists b, b ∈ A /\ x ∈ b).
 End SetAxioms.
 
 (** Constructing sets. *)
@@ -113,12 +120,6 @@ Module SetConstruction
     pose proof subset_schema (fun x => member x B) A x as h;
       cbn in *; intuition.
   Qed.
-
-  Lemma wah : forall A B C : Prop,
-      B -> A <-> B /\ C -> A <-> C.
-  Proof.
-    intuition.
-  Qed.
   
   Theorem two_A : ~ exists A, forall x, x ∈ A.
   Proof.
@@ -129,4 +130,34 @@ Module SetConstruction
       cbn in *.
     intuition.
   Qed.
+
+  Lemma Union_union : forall A B x,
+      x ∈ A ∪ B <-> x ∈ A \/ x ∈ B.
+  Proof.
+    intros A B x; unfold "_ ∪ _".
+    rewrite (Union_axiom ⟨A,B⟩ x).
+    split; intros h.
+    - destruct h as (b & hb & h).
+      pose proof pairing A B b as H.
+      rewrite H in hb.
+      destruct hb; subst; auto.
+    - destruct h as [h | h]; eexists; split;
+        eauto; rewrite pairing; auto.
+  Qed.
+
+  (** Abitrary intersection. *)
+  Definition Intersection_spec : Set :=
+    forall (A : set), (exists x, x ∈ A) -> { y : set | forall x, x ∈ A -> y ∈ x }.
+
+  Lemma Intersection_spec_inhabited :
+    inhabited Intersection_spec.
+  Proof.
+    constructor; unfold Intersection_spec.
+    Fail intros A [z h].
+    (** Maybe everything 
+        needs to be in [Set]
+        rather than [Prop]
+        so I can extract
+        an intersection operator. *)
+  Abort.
 End SetConstruction.
