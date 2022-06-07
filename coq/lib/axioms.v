@@ -131,6 +131,8 @@ Module SetConstruction
     intuition.
   Qed.
 
+  Print two_A.
+
   Lemma Union_union : forall A B x,
       x ∈ A ∪ B <-> x ∈ A \/ x ∈ B.
   Proof.

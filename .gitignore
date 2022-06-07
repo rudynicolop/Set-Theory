@@ -3,6 +3,7 @@ _build/
 *.exe
 *.install
 .merlin
+*.agdai
 
 # Emacs files
 .#*
