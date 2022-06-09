@@ -1,4 +1,4 @@
-module Axioms where
+module enderton.Axioms where
   open import Agda.Builtin.Equality using (_≡_;refl)
   open import Data.Sum.Base using (_⊎_;inj₁;inj₂;reduce)
   open import Data.Product
@@ -54,7 +54,8 @@ module Axioms where
   postulate
     pow : ∀ (a : set) → ∃[ B ] ∀ (x : set) → x ∈ B ↔ x ⊆ a
 
-  syntax comprehension c (λ x → ϕ) =  [ x ∈ c ∣ ϕ ]
+  comprehension-syntax = comprehension
+  syntax comprehension-syntax c (λ x → ϕ) =  [ x ∈ c ∣ ϕ ]
 
   singleton : ∀ (A : set) → ∃[ B ] ∀ x → x ∈ B ↔ x ≡ A
   singleton A = proj₁ ⟨A,A⟩ , lemma
@@ -69,8 +70,8 @@ module Axioms where
       lemma : ∀ (x : set) → (x ∈ proj₁ ⟨A,A⟩) ↔ x ≡ A
       lemma x = lemma→ x , lemma← x
 
-  theorem-2A : ∄[ A ] ∀ (z : set) → z ∈ A
-  theorem-2A (A , h) with [ x ∈ A ∣ x ∉ x ]
+  Theorem-2A : ∄[ A ] ∀ (z : set) → z ∈ A
+  Theorem-2A (A , h) with [ x ∈ A ∣ x ∉ x ]
   ... | B , H with H B
   ... | H₁ , H₂ with H₂ ((h B) , helper-B∉B)
     where
@@ -144,4 +145,15 @@ module Axioms where
           ∀z∈⟨a,b⟩→x∈z z z∈⟨a,b⟩ with proj₂ ⟨a,b⟩ z
           ... | z∈⟨a,b⟩→z≡a⊎z≡b , _ with z∈⟨a,b⟩→z≡a⊎z≡b z∈⟨a,b⟩
           ... | inj₁ refl = x∈a
-          ... | inj₂ refl = x∈b        
+          ... | inj₂ refl = x∈b
+
+  -- Set difference.
+  infix 3 _─_
+  _─_ : ∀ A B → ∃[ C ] ∀ x → x ∈ C ↔ x ∈ A × x ∉ B
+  A ─ B = proj₁ [z∈A∣z∉B] , λ x → lemma→ x , lemma← x
+    where
+      [z∈A∣z∉B] = [ z ∈ A ∣ z ∉ B ]
+      lemma→ : ∀ x → x ∈ proj₁ [z∈A∣z∉B] → x ∈ A × x ∉ B
+      lemma→ x x∈[z∈A∣z∉B] = proj₁ (proj₂ [z∈A∣z∉B] x) x∈[z∈A∣z∉B]
+      lemma← : ∀ x → x ∈ A × x ∉ B → x ∈ proj₁ [z∈A∣z∉B]
+      lemma← x x∈A×x∉B = proj₂ (proj₂ [z∈A∣z∉B] x) x∈A×x∉B
