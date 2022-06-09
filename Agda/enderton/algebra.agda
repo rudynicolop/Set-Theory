@@ -2,6 +2,7 @@ module enderton.algebra where
   open import Agda.Builtin.Equality using (_≡_;refl)
   open import Data.Empty using (⊥;⊥-elim)
   open import Relation.Nullary using (¬_)
+  open import Relation.Nullary.Negation using (contraposition)
   open import Data.Sum.Base using (_⊎_;inj₁;inj₂;reduce)
   open import Data.Product
     using (proj₁;proj₂;_×_;Σ;∃;∄;_,_;
@@ -203,9 +204,52 @@ module enderton.algebra where
 
   -- De Morgan's Laws.
 
-  C─A∪B≡C─A∪C─B : ∀ A B C
-    → proj₁ (C ─ proj₁ (A ∪ B)) ≡ proj₁ (proj₁ (C ─ A) ∪ proj₁ (C ─ B))
-  C─A∪B≡C─A∪C─B A B C = {!!}
+  x∉A∪B→x∉A : ∀ {A B x}
+    → x ∉ proj₁ (A ∪ B) → x ∉ A
+  x∉A∪B→x∉A {A} {B} {x} x∉A∪B x∈A = x∉A∪B
+    (proj₂ (proj₂ (A ∪ B) x) (inj₁ x∈A))
+
+  x∉A∪B→x∉B : ∀ {A B x}
+    → x ∉ proj₁ (A ∪ B) → x ∉ B
+  x∉A∪B→x∉B {A} {B} {x} x∉A∪B x∈B = x∉A∪B
+    (proj₂ (proj₂ (A ∪ B) x) (inj₂ x∈B))
+
+  x∉A∪B→x∉A×x∉B : ∀ {A B x}
+    → x ∉ proj₁ (A ∪ B) → x ∉ A × x ∉ B
+  x∉A∪B→x∉A×x∉B {A} {B} {x} x∉A∪B = x∉A∪B→x∉A x∉A∪B , x∉A∪B→x∉B x∉A∪B
+
+  x∉A→x∉B→x∉A∪B : ∀ {A B x}
+    → x ∉ A → x ∉ B → x ∉ proj₁ (A ∪ B)
+  x∉A→x∉B→x∉A∪B {A} {B} {x} x∉A x∉B x∈A∪B
+    with proj₁ (proj₂ (A ∪ B) x) x∈A∪B
+  ... | inj₁ x∈A = x∉A x∈A
+  ... | inj₂ x∈B = x∉B x∈B
+
+  C─A∪B≡C─A∩C─B : ∀ A B C
+    → proj₁ (C ─ proj₁ (A ∪ B)) ≡ proj₁ (proj₁ (C ─ A) ∩ proj₁ (C ─ B))
+  C─A∪B≡C─A∩C─B A B C = extensionality _ _ λ x → lemma→ x , lemma← x
+    where
+      lemma→ : ∀ x
+        → x ∈ proj₁ (C ─ proj₁ (A ∪ B))
+        → x ∈ proj₁ (proj₁ (C ─ A) ∩ proj₁ (C ─ B))
+      lemma→ x x∈C─A∪B
+        with proj₁ (proj₂ (C ─ proj₁ (A ∪ B)) x) x∈C─A∪B
+      ... | x∈C , x∉A∪B with x∉A∪B→x∉A×x∉B x∉A∪B
+      ... | x∉A , x∉B = proj₂
+        (proj₂ (proj₁ (C ─ A) ∩ proj₁ (C ─ B)) x)
+        (proj₂ (proj₂ (C ─ A) x) (x∈C , x∉A)
+        , proj₂ (proj₂ (C ─ B) x) (x∈C , x∉B))
+      lemma← : ∀ x
+        → x ∈ proj₁ (proj₁ (C ─ A) ∩ proj₁ (C ─ B))
+        → x ∈ proj₁ (C ─ proj₁ (A ∪ B))
+      lemma← x x∈C─A∪C─B
+        with proj₁ (proj₂ (proj₁ (C ─ A) ∩ proj₁ (C ─ B)) x) x∈C─A∪C─B
+      ... | x∈C─A , x∈C─B
+        with proj₁ (proj₂ (C ─ A) x) x∈C─A
+          | proj₁ (proj₂ (C ─ B) x) x∈C─B
+      ... | x∈C , x∉A | _ , x∉B = proj₂
+        (proj₂ (C ─ proj₁ (A ∪ B)) x)
+        (x∈C , x∉A→x∉B→x∉A∪B x∉A x∉B)
 
   C─A∩B≡C─A∩C─B : ∀ A B C
     → proj₁ (C ─ proj₁ (A ∩ B)) ≡ proj₁ (proj₁ (C ─ A) ∩ proj₁ (C ─ B))
