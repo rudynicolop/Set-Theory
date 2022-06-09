@@ -70,11 +70,65 @@ module enderton.algebra where
 
   ∪-assoc : ∀ A B C
     → proj₁ (A ∪ proj₁ (B ∪ C)) ≡ proj₁ (proj₁ (A ∪ B) ∪ C)
-  ∪-assoc A B C = {!!}
+  ∪-assoc A B C = extensionality _ _ λ x → lemma→ x , lemma← x
+    where
+      lemma→ : ∀ x
+        → x ∈ proj₁ (A ∪ proj₁ (B ∪ C)) → x ∈ proj₁ (proj₁ (A ∪ B) ∪ C)
+      lemma→ x x∈A∪B∪C
+        with proj₂ (A ∪ proj₁ (B ∪ C)) x
+          | proj₂ (proj₁ (A ∪ B) ∪ C) x
+      ... | x∈A∪B∪C→x∈A⊎x∈B∪C , _
+          | _ , x∈A∪B⊎x∈C→x∈A∪B∪C
+          with x∈A∪B∪C→x∈A⊎x∈B∪C x∈A∪B∪C
+      ... | inj₁ x∈A = x∈A∪B⊎x∈C→x∈A∪B∪C (inj₁ (proj₂ (proj₂ (A ∪ B) x) (inj₁ x∈A)))
+      ... | inj₂ x∈B∪C with proj₂ (B ∪ C) x
+      ... | x∈B∪C→x∈B⊎x∈C , _ with x∈B∪C→x∈B⊎x∈C x∈B∪C
+      ... | inj₁ x∈B = x∈A∪B⊎x∈C→x∈A∪B∪C (inj₁ (proj₂ (proj₂ (A ∪ B) x) (inj₂ x∈B)))
+      ... | inj₂ x∈C = x∈A∪B⊎x∈C→x∈A∪B∪C (inj₂ x∈C)
+      lemma← : ∀ x
+        → x ∈ proj₁ (proj₁ (A ∪ B) ∪ C) → x ∈ proj₁ (A ∪ proj₁ (B ∪ C))
+      lemma← x x∈A∪B∪C
+        with proj₂ (proj₁ (A ∪ B) ∪ C) x
+          | proj₂ (A ∪ proj₁ (B ∪ C)) x
+      ... | x∈A∪B∪C→x∈A∪B⊎x∈C , _
+          | _ , x∈A⊎x∈B∪C→x∈A∪B∪C
+          with x∈A∪B∪C→x∈A∪B⊎x∈C x∈A∪B∪C
+      ... | inj₂ x∈C = x∈A⊎x∈B∪C→x∈A∪B∪C (inj₂ (proj₂ (proj₂ (B ∪ C) x) (inj₂ x∈C)))
+      ... | inj₁ x∈A∪B with proj₁ (proj₂ (A ∪ B) x) x∈A∪B
+      ... | inj₁ x∈A = x∈A⊎x∈B∪C→x∈A∪B∪C (inj₁ x∈A)
+      ... | inj₂ x∈B = x∈A⊎x∈B∪C→x∈A∪B∪C (inj₂ (proj₂ (proj₂ (B ∪ C) x) (inj₁ x∈B)))
 
   ∩-assoc : ∀ A B C
     → proj₁ (A ∩ proj₁ (B ∩ C)) ≡ proj₁ (proj₁ (A ∩ B) ∩ C)
-  ∩-assoc A B C = {!!}
+  ∩-assoc A B C = extensionality _ _ λ x → {!!} , {!!}
+    where
+      lemma→ : ∀ x
+        → x ∈ proj₁ (A ∩ proj₁ (B ∩ C))
+        → x ∈ proj₁ (proj₁ (A ∩ B) ∩ C)
+      lemma→ x x∈A∩B∩C
+        with proj₂ (A ∩ proj₁ (B ∩ C)) x
+          | proj₂ (proj₁ (A ∩ B) ∩ C) x
+      ... | x∈A∩B∩C→x∈A×x∈xB∩C , _
+          | _ , x∈A∩B×x∈C→x∈A∩B∩C
+          with x∈A∩B∩C→x∈A×x∈xB∩C x∈A∩B∩C
+      ... | x∈A , x∈B∩C with proj₂ (B ∩ C) x
+      ... | x∈B∩C→x∈B×x∈C , _ with x∈B∩C→x∈B×x∈C x∈B∩C
+      ... | x∈B , x∈C = x∈A∩B×x∈C→x∈A∩B∩C
+        (proj₂ (proj₂ (A ∩ B) x) (x∈A , x∈B) , x∈C)
+      lemma← : ∀ x
+        → x ∈ proj₁ (proj₁ (A ∩ B) ∩ C)
+        → x ∈ proj₁ (A ∩ proj₁ (B ∩ C))
+      lemma← x x∈A∩B∩C
+        with proj₂ (proj₁ (A ∩ B) ∩ C) x
+          | proj₂ (A ∩ proj₁ (B ∩ C)) x
+      ... | x∈A∩B∩C→x∈A∩B×x∈C , _
+          | _ , x∈A×x∈xB∩C→x∈A∩B∩C
+          with x∈A∩B∩C→x∈A∩B×x∈C x∈A∩B∩C
+      ... | x∈A∩B , x∈C with proj₂ (A ∩ B) x
+      ... | x∈A∩B→x∈A×x∈B , _
+        with x∈A∩B→x∈A×x∈B x∈A∩B
+      ... | x∈A , x∈B = x∈A×x∈xB∩C→x∈A∩B∩C
+        (x∈A , proj₂ (proj₂ (B ∩ C) x) (x∈B , x∈C))
 
   -- Distributive Laws.
 
