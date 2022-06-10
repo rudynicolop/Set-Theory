@@ -302,13 +302,41 @@ module enderton.algebra where
   -- Identities.
 
   A∪∅≡A : ∀ A → proj₁ (A ∪ proj₁ ∅) ≡ A
-  A∪∅≡A A = {!!}
+  A∪∅≡A A = extensionality _ _ λ x → lemma→ x , lemma← x
+    where
+      lemma→ : ∀ x → x ∈ proj₁ (A ∪ proj₁ ∅) → x ∈ A
+      lemma→ x x∈A∪∅ with proj₁ (proj₂ (A ∪ proj₁ ∅) x) x∈A∪∅
+      ... | inj₁ x∈A = x∈A
+      ... | inj₂ x∈∅ = ⊥-elim (proj₂ ∅ x x∈∅)
+      lemma← : ∀ x → x ∈ A → x ∈ proj₁ (A ∪ proj₁ ∅)
+      lemma← x x∈A = proj₂ (proj₂ (A ∪ proj₁ ∅) x) (inj₁ x∈A)
 
-  A∩∅≡A : ∀ A → proj₁ (A ∩ proj₁ ∅) ≡ proj₁ ∅
-  A∩∅≡A A = {!!}
+  A∩∅≡∅ : ∀ A → proj₁ (A ∩ proj₁ ∅) ≡ proj₁ ∅
+  A∩∅≡∅ A = extensionality _ _ λ x → lemma→ x , lemma← x
+    where
+      lemma→ : ∀ x → x ∈ proj₁ (A ∩ proj₁ ∅) → x ∈ proj₁ ∅
+      lemma→ x x∈A∩∅
+        with proj₁ (proj₂ (A ∩ proj₁ ∅) x) x∈A∩∅
+      ... | _ , x∈∅ = x∈∅
+      lemma← : ∀ x → x ∈ proj₁ ∅ → x ∈ proj₁ (A ∩ proj₁ ∅)
+      lemma← x x∈∅ = ⊥-elim (proj₂ ∅ x x∈∅)
 
   A─∅≡A : ∀ A → proj₁ (A ─ proj₁ ∅) ≡ A
-  A─∅≡A A = {!!}
+  A─∅≡A A = extensionality _ _ λ x → lemma→ x , lemma← x
+    where
+      lemma→ : ∀ x → x ∈ proj₁ (A ─ proj₁ ∅) → x ∈ A
+      lemma→ x x∈A─∅ = proj₁ (proj₁ (proj₂ (A ─ proj₁ ∅) x) x∈A─∅)
+      lemma← : ∀ x → x ∈ A → x ∈ proj₁ (A ─ proj₁ ∅)
+      lemma← x x∈A = proj₂ (proj₂ (A ─ proj₁ ∅) x) (x∈A , proj₂ ∅ x)
 
-  A∩C─A≡∅ : ∀ A C → proj₁ (proj₁ (A ∩ C) ─ A) ≡ proj₁ ∅
-  A∩C─A≡∅ A C = {!!}
+  A∩C─A≡∅ : ∀ A C → proj₁ (A ∩ proj₁ (C ─ A)) ≡ proj₁ ∅
+  A∩C─A≡∅ A C = extensionality _ _ λ x → lemma→ x , lemma← x
+    where
+      lemma→ : ∀ x → x ∈ proj₁ (A ∩ proj₁ (C ─ A)) → x ∈ proj₁ ∅
+      lemma→ x x∈A∩C─A
+        with proj₁ (proj₂ (A ∩ proj₁ (C ─ A)) x) x∈A∩C─A
+      ... | x∈A , x∈C─A
+        with  proj₁ (proj₂ (C ─ A) x) x∈C─A
+      ... | _ , x∉A = ⊥-elim (x∉A x∈A)
+      lemma← : ∀ x → x ∈ proj₁ ∅ → x ∈ proj₁ (A ∩ proj₁ (C ─ A))
+      lemma← x x∈∅ = ⊥-elim (proj₂ ∅ x x∈∅)
