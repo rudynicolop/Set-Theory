@@ -251,9 +251,53 @@ module enderton.algebra where
         (proj₂ (C ─ proj₁ (A ∪ B)) x)
         (x∈C , x∉A→x∉B→x∉A∪B x∉A x∉B)
 
-  C─A∩B≡C─A∩C─B : ∀ A B C
-    → proj₁ (C ─ proj₁ (A ∩ B)) ≡ proj₁ (proj₁ (C ─ A) ∩ proj₁ (C ─ B))
-  C─A∩B≡C─A∩C─B A B C = {!!}
+  -- Theorems that require excluded middle
+  module de_morgan_exm
+    (P⊎¬P : ∀ (P : Set) → P ⊎ ¬ P) where
+
+    x∉A∩B→x∉A⊎x∉B : ∀ {A B x}
+      → x ∉ proj₁ (A ∩ B) → x ∉ A ⊎ x ∉ B
+    x∉A∩B→x∉A⊎x∉B {A} {B} {x} x∉A∩B with P⊎¬P (x ∈ A)
+    ... | inj₂ x∉A = inj₁ x∉A
+    ... | inj₁ x∈A with P⊎¬P (x ∈ B)
+    ... | inj₂ x∉B = inj₂ x∉B
+    ... | inj₁ x∈B = ⊥-elim (x∉A∩B (proj₂ (proj₂ (A ∩ B) x) (x∈A , x∈B)))
+
+    C─A∩B≡C─A∪C─B : ∀ A B C
+      → proj₁ (C ─ proj₁ (A ∩ B)) ≡ proj₁ (proj₁ (C ─ A) ∪ proj₁ (C ─ B))
+    C─A∩B≡C─A∪C─B A B C = extensionality _ _ λ x → lemma→ x , lemma← x
+      where
+        lemma→ : ∀ x
+          → x ∈ proj₁ (C ─ proj₁ (A ∩ B))
+          → x ∈ proj₁ (proj₁ (C ─ A) ∪ proj₁ (C ─ B))
+        lemma→ x x∈C─A∩B
+          with proj₁ (proj₂ (C ─ (proj₁ (A ∩ B))) x) x∈C─A∩B
+        ... | x∈C , x∉A∩B with x∉A∩B→x∉A⊎x∉B x∉A∩B
+        ... | inj₁ x∉A = proj₂
+          (proj₂ (proj₁ (C ─ A) ∪ proj₁ (C ─ B)) x)
+          (inj₁ (proj₂ (proj₂ (C ─ A) x) (x∈C , x∉A)))
+        ... | inj₂ x∉B = proj₂
+          (proj₂ (proj₁ (C ─ A) ∪ proj₁ (C ─ B)) x)
+          (inj₂ (proj₂ (proj₂ (C ─ B) x) (x∈C , x∉B)))
+        lemma← : ∀ x
+          → x ∈ proj₁ (proj₁ (C ─ A) ∪ proj₁ (C ─ B))
+          → x ∈ proj₁ (C ─ proj₁ (A ∩ B))
+        lemma← x x∈C─A∪C─B
+          with proj₁
+            (proj₂ (proj₁ (C ─ A) ∪ proj₁ (C ─ B)) x)
+            x∈C─A∪C─B
+        ... | inj₁ x∈C─A = proj₂
+          (proj₂ (C ─ proj₁ (A ∩ B)) x)
+          (proj₁ (proj₁ (proj₂ (C ─ A) x) x∈C─A)
+          , contraposition
+            (proj₁ (proj₂ (A ∩ B) x))
+            λ { (x∈A , _) → proj₂ (proj₁ (proj₂ (C ─ A) x) x∈C─A) x∈A })
+        ... | inj₂ x∈C─B = proj₂
+          (proj₂ (C ─ proj₁ (A ∩ B)) x)
+          (proj₁ (proj₁ (proj₂ (C ─ B) x) x∈C─B)
+          , contraposition
+            (proj₁ (proj₂ (A ∩ B) x))
+            λ { (_ , x∈B) → proj₂ (proj₁ (proj₂ (C ─ B) x) x∈C─B) x∈B })
 
   -- Identities.
 
