@@ -434,4 +434,19 @@ module enderton.algebra where
           [ t ∈ proj₁ (pow (proj₁ (A ∩ proj₁ (⋃ B))))
           ∣ ∃[ X ] X ∈ B × t ≡ proj₁ (A ∩ X) ]))
           → x ∈ (proj₁ (A ∩ proj₁ (⋃ B)))
-      lemma← x x∈⋃[t∈powA∩⋃B∣∃X∈B×t≡A∩X] = {!!}
+      lemma← x x∈⋃[t∈powA∩⋃B∣∃X∈B×t≡A∩X]
+        with proj₁
+          (proj₂ (⋃ (proj₁
+          [ t ∈ proj₁ (pow (proj₁ (A ∩ proj₁ (⋃ B))))
+          ∣ ∃[ X ] X ∈ B × t ≡ proj₁ (A ∩ X) ])) x)
+          x∈⋃[t∈powA∩⋃B∣∃X∈B×t≡A∩X]
+      ... | a , a∈[t∈powA∩⋃B∣∃X∈B×t≡A∩X] , x∈a
+        with proj₁
+          (proj₂ [ t ∈ proj₁ (pow (proj₁ (A ∩ proj₁ (⋃ B))))
+            ∣ ∃[ X ] X ∈ B × t ≡ proj₁ (A ∩ X) ] a)
+          a∈[t∈powA∩⋃B∣∃X∈B×t≡A∩X]
+      ... | a∈powA∩⋃B , b , b∈B , refl
+        with proj₁ (proj₂ (A ∩ b) x) x∈a
+      ... | x∈A , x∈b = proj₂
+        (proj₂ (A ∩ proj₁ (⋃ B)) x)
+        (x∈A , proj₂ (proj₂ (⋃ B) x) (b , b∈B , x∈b))
