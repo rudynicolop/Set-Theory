@@ -1,4 +1,4 @@
-module enderton.Axioms where
+module enderton.axioms where
   open import Agda.Builtin.Equality using (_≡_;refl)
   open import Data.Sum.Base using (_⊎_;inj₁;inj₂;reduce)
   open import Data.Product

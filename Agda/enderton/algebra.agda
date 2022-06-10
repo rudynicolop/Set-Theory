@@ -7,9 +7,11 @@ module enderton.algebra where
   open import Data.Product
     using (proj₁;proj₂;_×_;Σ;∃;∄;_,_;
       Σ-syntax;∃-syntax;∄-syntax)
-  open import enderton.Axioms using (set;_∈_;_∉_;_⊆_;⋃;pow
+  open import enderton.axioms using (set;_∈_;_∉_;_⊆_;⋃;pow
     ;extensionality;_↔_;_∩_;comprehension;⋂;_∪_
     ;comprehension-syntax;⟨_,_⟩;singleton;Theorem-2A;_─_;∅)
+  open import enderton.exercises.ch2
+    using (A∈powA;a∈A→a⊆⋃A)
 
   A∪B─C≡A─C∪B─C : ∀ A B C
     → proj₁ ((proj₁ (A ∪ B)) ─ C) ≡ proj₁ (proj₁ (A ─ C) ∪ proj₁ (B ─ C))
@@ -252,7 +254,7 @@ module enderton.algebra where
         (x∈C , x∉A→x∉B→x∉A∪B x∉A x∉B)
 
   -- Theorems that require excluded middle
-  module de_morgan_exm
+  module de_morgan_P⊎¬P
     (P⊎¬P : ∀ (P : Set) → P ⊎ ¬ P) where
 
     x∉A∩B→x∉A⊎x∉B : ∀ {A B x}
@@ -340,3 +342,96 @@ module enderton.algebra where
       ... | _ , x∉A = ⊥-elim (x∉A x∈A)
       lemma← : ∀ x → x ∈ proj₁ ∅ → x ∈ proj₁ (A ∩ proj₁ (C ─ A))
       lemma← x x∈∅ = ⊥-elim (proj₂ ∅ x x∈∅)
+
+  -- Properties of [_⊆_].
+
+  -- Reflexivity.
+  A⊆A : ∀ A → A ⊆ A
+  A⊆A A {x} x∈A = x∈A
+
+  -- Transitivity.
+  A⊆B→B⊆C→A⊆C : ∀ {A B C}
+    → A ⊆ B → B ⊆ C → A ⊆ C
+  A⊆B→B⊆C→A⊆C A⊆B B⊆C {x} x∈A = B⊆C (A⊆B x∈A)
+
+  -- Anti-symmetry.
+  A⊆B→B⊆A→A≡B : ∀ {A B}
+    → A ⊆ B → B ⊆ A → A ≡ B
+  A⊆B→B⊆A→A≡B {A} {B} A⊆B B⊆A =
+    extensionality _ _ λ x → A⊆B {x} , B⊆A {x}
+
+  A⊆B→x∉B→x∉A : ∀ {A B x}
+    → A ⊆ B → x ∉ B → x ∉ A
+  A⊆B→x∉B→x∉A {A} {B} {x} A⊆B x∉B x∈A = x∉B (A⊆B x∈A)
+
+  A⊆B→C─B⊆C─A : ∀ {A B C}
+    → A ⊆ B → proj₁ (C ─ B) ⊆ proj₁ (C ─ A)
+  A⊆B→C─B⊆C─A {A} {B} {C} A⊆B {x} x∈C─B
+    with proj₁ (proj₂ (C ─ B) x) x∈C─B
+  ... | x∈C , x∉B = proj₂ (proj₂ (C ─ A) x) (x∈C , A⊆B→x∉B→x∉A A⊆B x∉B)
+
+  A⊆B→∃[a]a∈A→∃[b]b∈B : ∀ {A B}
+    → A ⊆ B → (∃[ a ] a ∈ A) → ∃[ b ] b ∈ B
+  A⊆B→∃[a]a∈A→∃[b]b∈B {A} {B} A⊆B (a , a∈A) = a , (A⊆B a∈A)
+
+  A⊆B→⋂B⊆⋂A : ∀ {A B} (A⊆B : A ⊆ B) (∃a∈A : ∃[ a ] a ∈ A)
+    → proj₁ (⋂ B (A⊆B→∃[a]a∈A→∃[b]b∈B A⊆B ∃a∈A)) ⊆ proj₁ (⋂ A ∃a∈A)
+  A⊆B→⋂B⊆⋂A {A} {B} A⊆B ∃a∈A {x} x∈⋂B
+    with proj₁
+      (proj₂ (⋂ B (A⊆B→∃[a]a∈A→∃[b]b∈B A⊆B ∃a∈A)) x)
+      x∈⋂B
+  ... | b∈B→x∈b = proj₂
+    (proj₂ (⋂ A ∃a∈A) x)
+    λ a a∈A → b∈B→x∈b a (A⊆B a∈A)
+
+  B⊆C→A∩B⊆A∩C : ∀ {A B C}
+    → B ⊆ C → proj₁ (A ∩ B) ⊆ proj₁ (A ∩ C)
+  B⊆C→A∩B⊆A∩C {A} {B} {C} B⊆C {x} x∈A∩B
+    with proj₁ (proj₂ (A ∩ B) x) x∈A∩B
+  ... | x∈A , x∈B = proj₂ (proj₂ (A ∩ C) x) (x∈A , (B⊆C x∈B))
+
+  A⊆B→A∩C⊆B∩C : ∀ {A B C}
+    → A ⊆ B → proj₁ (A ∩ C) ⊆ proj₁ (B ∩ C)
+  A⊆B→A∩C⊆B∩C {A} {B} {C} A⊆B
+    rewrite A∩B≡B∩A A C | A∩B≡B∩A B C = B⊆C→A∩B⊆A∩C A⊆B
+
+  A⊆B→C⊆D→A∩C⊆B∩D : ∀ {A B C D}
+    → A ⊆ B → C ⊆ D → proj₁ (A ∩ C) ⊆ proj₁ (B ∩ D)
+  A⊆B→C⊆D→A∩C⊆B∩D {A} {B} {C} {D} A⊆B C⊆D =
+    A⊆B→B⊆C→A⊆C {B = proj₁ (B ∩ C)}
+      (A⊆B→A∩C⊆B∩C A⊆B) (B⊆C→A∩B⊆A∩C C⊆D)
+
+  -- More distributive laws.
+  A∩⋃B≡⋃[t∈powA∩⋃B∣∃X∈B×t≡A∩X] : ∀ A B
+    → proj₁ (A ∩ proj₁ (⋃ B))
+      ≡ proj₁ (⋃ (proj₁
+        [ t ∈ proj₁ (pow (proj₁ (A ∩ proj₁ (⋃ B))))
+        ∣ ∃[ X ] X ∈ B × t ≡ proj₁ (A ∩ X) ]))
+  A∩⋃B≡⋃[t∈powA∩⋃B∣∃X∈B×t≡A∩X] A B =
+    extensionality _ _ λ x → lemma→ x , lemma← x
+    where
+      lemma→ : ∀ x →
+        x ∈ (proj₁ (A ∩ proj₁ (⋃ B)))
+          → x ∈ proj₁ (⋃ (proj₁
+              [ t ∈ proj₁ (pow (proj₁ (A ∩ proj₁ (⋃ B))))
+              ∣ ∃[ X ] X ∈ B × t ≡ proj₁ (A ∩ X) ]))
+      lemma→ x x∈A∩⋃B
+        with proj₁ (proj₂ (A ∩ proj₁ (⋃ B)) x) x∈A∩⋃B
+      ... | x∈A , x∈⋃B with proj₁ (proj₂ (⋃ B) x) x∈⋃B
+      ... | y , y∈B , x∈y = proj₂
+        (proj₂ (⋃ (proj₁
+          [ t ∈ proj₁ (pow (proj₁ (A ∩ proj₁ (⋃ B))))
+          ∣ ∃[ X ] X ∈ B × t ≡ proj₁ (A ∩ X) ])) x)
+          (proj₁ (A ∩ y)
+          , proj₂ (proj₂ [ t ∈ proj₁ (pow (proj₁ (A ∩ proj₁ (⋃ B))))
+            ∣ ∃[ X ] X ∈ B × t ≡ proj₁ (A ∩ X) ] _)
+            (proj₂ (proj₂ (pow (proj₁ (A ∩ proj₁ (⋃ B)))) _)
+              (B⊆C→A∩B⊆A∩C (a∈A→a⊆⋃A _ _ y∈B))
+            , y , y∈B , refl)
+          , proj₂ (proj₂ (A ∩ y) x) (x∈A , x∈y))
+      lemma← : ∀ x →
+        x ∈ proj₁ (⋃ (proj₁
+          [ t ∈ proj₁ (pow (proj₁ (A ∩ proj₁ (⋃ B))))
+          ∣ ∃[ X ] X ∈ B × t ≡ proj₁ (A ∩ X) ]))
+          → x ∈ (proj₁ (A ∩ proj₁ (⋃ B)))
+      lemma← x x∈⋃[t∈powA∩⋃B∣∃X∈B×t≡A∩X] = {!!}

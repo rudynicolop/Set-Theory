@@ -1,4 +1,4 @@
-module enderton.exercises.Ch2 where
+module enderton.exercises.ch2 where
   open import Agda.Builtin.Equality using (_≡_;refl)
   open import Data.Empty using (⊥;⊥-elim)
   open import Relation.Nullary using (¬_)
@@ -6,7 +6,7 @@ module enderton.exercises.Ch2 where
   open import Data.Product
     using (proj₁;proj₂;_×_;Σ;∃;∄;_,_;
       Σ-syntax;∃-syntax;∄-syntax)
-  open import enderton.Axioms using (set;_∈_;_⊆_;⋃;pow
+  open import enderton.axioms using (set;_∈_;_⊆_;⋃;pow
     ;extensionality;_↔_;_∩_;comprehension;⋂;_∪_
     ;comprehension-syntax;⟨_,_⟩;singleton;Theorem-2A)
 
