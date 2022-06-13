@@ -433,13 +433,13 @@ module enderton.algebra where
         (B⊆C→A∪B⊆A∪C (a∈A→a⊆⋃A _ _ b∈B))
       , b , b∈B , refl)
 
-  A∪⋂B⊆∩[t∈powA∪⋂B∣∃X∈B×t≡A∪X] : ∀ A B (∃b∈B : ∃[ b ] b ∈ B)
+  A∪⋂B⊆⋂[t∈powA∪⋂B∣∃X∈B×t≡A∪X] : ∀ A B (∃b∈B : ∃[ b ] b ∈ B)
     → proj₁ (A ∪ proj₁ (⋂ B ∃b∈B))
       ⊆ proj₁ (⋂ (proj₁
         [ t ∈ proj₁ (pow (proj₁ (A ∪ proj₁ (⋃ B))))
         ∣ ∃[ X ] X ∈ B × t ≡ proj₁ (A ∪ X) ])
         (∃b∈B→∃b∈[t∈powA∪⋂B∣∃X∈B×t≡A∪X] A _ ∃b∈B))
-  A∪⋂B⊆∩[t∈powA∪⋂B∣∃X∈B×t≡A∪X] A B ∃b∈B {x} x∈A∪⋂B
+  A∪⋂B⊆⋂[t∈powA∪⋂B∣∃X∈B×t≡A∪X] A B ∃b∈B {x} x∈A∪⋂B
     with proj₁ (proj₂ (A ∪ proj₁ (⋂ B ∃b∈B)) x) x∈A∪⋂B
   ... | inj₁ x∈A = proj₂
     (proj₂ (⋂ (proj₁
@@ -475,7 +475,7 @@ module enderton.algebra where
       ... | A∪b∈powA∪⋃B , b , b∈B , refl
           | b∈B→x∈b = proj₂ (proj₂ (A ∪ b) x) (inj₂ (b∈B→x∈b _ b∈B))
 
-    -- Theorems that require excluded middle
+  -- Theorems that require excluded middle
   module lemmas-P⊎¬P
     (P⊎¬P : ∀ (P : Set) → P ⊎ ¬ P) where
 
@@ -524,14 +524,14 @@ module enderton.algebra where
             λ { (_ , x∈B) → proj₂ (proj₁ (proj₂ (C ─ B) x) x∈C─B) x∈B })
 
     -- More distribution.
-    A∪⋂B≡∩[t∈powA∪⋂B∣∃X∈B×t≡A∪X] : ∀ A B (∃b∈B : ∃[ b ] b ∈ B)
+    A∪⋂B≡⋂[t∈powA∪⋂B∣∃X∈B×t≡A∪X] : ∀ A B (∃b∈B : ∃[ b ] b ∈ B)
       → proj₁ (A ∪ proj₁ (⋂ B ∃b∈B))
         ≡ proj₁ (⋂ (proj₁
           [ t ∈ proj₁ (pow (proj₁ (A ∪ proj₁ (⋃ B))))
           ∣ ∃[ X ] X ∈ B × t ≡ proj₁ (A ∪ X) ])
           (∃b∈B→∃b∈[t∈powA∪⋂B∣∃X∈B×t≡A∪X] A _ ∃b∈B))
-    A∪⋂B≡∩[t∈powA∪⋂B∣∃X∈B×t≡A∪X] A B ∃b∈B = extensionality
-      _ _ λ x → A∪⋂B⊆∩[t∈powA∪⋂B∣∃X∈B×t≡A∪X] A B ∃b∈B {x} , lemma← x
+    A∪⋂B≡⋂[t∈powA∪⋂B∣∃X∈B×t≡A∪X] A B ∃b∈B = extensionality
+      _ _ λ x → A∪⋂B⊆⋂[t∈powA∪⋂B∣∃X∈B×t≡A∪X] A B ∃b∈B {x} , lemma← x
       where
         lemma← : ∀ x
           → x ∈ proj₁ (⋂ (proj₁
