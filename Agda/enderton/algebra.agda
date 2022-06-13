@@ -476,7 +476,7 @@ module enderton.algebra where
           | b∈B→x∈b = proj₂ (proj₂ (A ∪ b) x) (inj₂ (b∈B→x∈b _ b∈B))
 
     -- Theorems that require excluded middle
-  module lemmas_P⊎¬P
+  module lemmas-P⊎¬P
     (P⊎¬P : ∀ (P : Set) → P ⊎ ¬ P) where
 
     x∉A∩B→x∉A⊎x∉B : ∀ {A B x}
