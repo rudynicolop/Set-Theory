@@ -393,7 +393,7 @@ module enderton.algebra where
   C─A⊆C : ∀ C A → proj₁ (C ─ A) ⊆ C
   C─A⊆C C A {x} x∈C─A = proj₁ (proj₁ (proj₂ (C ─ A) _) x∈C─A)
 
-  -- More distributive laws.
+  -- General distributive laws.
 
   A∩⋃B≡⋃[t∈powA∩⋃B∣∃X∈B×t≡A∩X] : ∀ A B
     → proj₁ (A ∩ proj₁ (⋃ B))
@@ -592,39 +592,25 @@ module enderton.algebra where
       (proj₂ (⋃ (proj₁ [ t ∈ proj₁ (pow C)
         ∣ ∃[ X ] X ∈ A × t ≡ proj₁ (C ─ X)])) x)
       x∈⋃[t∈powC∣∃X∈A×t≡C─X]
-  ... | c , c∈[t∈powC∣∃X∈A×t≡C─A] , x∈c = {!!}
+  ... | c , c∈[t∈powC∣∃X∈A×t≡C─A] , x∈c
+    with proj₁
+      (proj₂ [ t ∈ proj₁ (pow C)
+        ∣ ∃[ X ] X ∈ A × t ≡ proj₁ (C ─ X)] c)
+      c∈[t∈powC∣∃X∈A×t≡C─A]
+  ... | c∈powC , a , a∈A , refl = proj₂
+    (proj₂ (C ─ proj₁ (⋂ A ∃a∈A)) _)
+    (proj₁ (proj₂ (pow C) _) c∈powC x∈c , λ x∈⋂A → help x∈⋂A)
+    where
+      help : x ∉ proj₁ (⋂ A ∃a∈A)
+      help x∈⋂A with proj₁ (proj₂ (⋂ A ∃a∈A) _) x∈⋂A
+      ... | ∀a∈A→x∈a with proj₁ (proj₂ (C ─ a) _) x∈c
+      ... | _ , x∉a = x∉a (∀a∈A→x∈a _ a∈A)
 
-  -- Theorems that require excluded middle
-  module lemmas-P⊎¬P
+  -- Theorems that require excluded middle.
+  module lemmas-rem
     (P⊎¬P : ∀ (P : Set) → P ⊎ ¬ P) where
-
-    ¬¬P→P : ∀ {P : Set} → ¬ ¬ P → P
-    ¬¬P→P {P} ¬¬P with P⊎¬P P
-    ... | inj₁ p = p
-    ... | inj₂ ¬P = ⊥-elim (¬¬P ¬P)
-
-    ¬P→¬Q⟶Q→P : ∀ {P Q : Set}
-      → (¬ P → ¬ Q) → Q → P
-    ¬P→¬Q⟶Q→P {P} {Q} ¬P→¬Q q
-      with P⊎¬P P
-    ... | inj₁ p = p
-    ... | inj₂ ¬P = ⊥-elim (¬P→¬Q ¬P q)
-
-    ¬P→Q⟶P×¬Q : ∀ {P Q : Set}
-      → ¬ (P → Q) → P × ¬ Q
-    ¬P→Q⟶P×¬Q {P} {Q} ¬P→Q
-      with P⊎¬P P | P⊎¬P Q
-    ... | inj₁ p | inj₁ q = ⊥-elim (¬P→Q λ _ → q)
-    ... | inj₁ p | inj₂ ¬Q = p , ¬Q
-    ... | inj₂ ¬P | inj₁ q = ⊥-elim (¬P→Q λ _ → q)
-    ... | inj₂ ¬P | inj₂ ¬Q = ⊥-elim (¬P→Q (¬P→¬Q⟶Q→P λ _ → ¬P))
-
-    ¬∀→∃¬ : ∀ {X : Set} {P : X → Set}
-      → (¬ (∀ (x : X) → P x)) → ∃[ x ] ¬ P x
-    ¬∀→∃¬ {X} {P} ¬∀ with P⊎¬P (∃[ x ] ¬ P x)
-    ... | inj₁ ∃¬P = ∃¬P
-    ... | inj₂ ¬∃¬P with ¬∃⟶∀¬ ¬∃¬P
-    ... | ∀¬P = ⊥-elim (¬∀ λ x → ¬¬P→P (∀¬P x))
+    open import enderton.exm
+    open enderton.exm.rem (P⊎¬P) using (¬∀→∃¬;¬P→Q⟶P×¬Q)
 
     x∉A∩B→x∉A⊎x∉B : ∀ {A B x}
       → x ∉ proj₁ (A ∩ B) → x ∉ A ⊎ x ∉ B
@@ -659,7 +645,7 @@ module enderton.algebra where
           (proj₂ (proj₁ (C ─ A) ∪ proj₁ (C ─ B)) x)
           (inj₂ (proj₂ (proj₂ (C ─ B) x) (x∈C , x∉B)))
 
-    -- More distribution.
+    -- General distributive law.
     A∪⋂B≡⋂[t∈powA∪⋂B∣∃X∈B×t≡A∪X] : ∀ A B (∃b∈B : ∃[ b ] b ∈ B)
       → proj₁ (A ∪ proj₁ (⋂ B ∃b∈B))
         ≡ proj₁ (⋂ (proj₁
@@ -713,10 +699,13 @@ module enderton.algebra where
                     ... | inj₁ x∈A = ⊥-elim (x∉A x∈A)
                     ... | inj₂ x∈b = x∈b
 
+    -- General De Morgan's Law.
     C─⋂A≡⋃[t∈powC∣∃X∈A×t≡C─A] : ∀ C A (∃a∈A : ∃[ a ] a ∈ A)
       → proj₁ (C ─ proj₁ (⋂ A ∃a∈A))
         ≡ proj₁ (⋃ (proj₁ [ t ∈ proj₁ (pow C) ∣ ∃[ X ] X ∈ A × t ≡ proj₁ (C ─ X)]))
-    C─⋂A≡⋃[t∈powC∣∃X∈A×t≡C─A] C A ∃a∈A = extensionality _ _ λ x → lemma→ x , {!!}
+    C─⋂A≡⋃[t∈powC∣∃X∈A×t≡C─A] C A ∃a∈A =
+      extensionality _ _ λ x → lemma→ x
+        , ⋃[t∈powC∣∃X∈A×t≡C─A]⊆C─⋂A {∃a∈A = ∃a∈A} {x = x}
       where
         lemma→ : ∀ x
           → x ∈ proj₁ (C ─ proj₁ (⋂ A ∃a∈A))
