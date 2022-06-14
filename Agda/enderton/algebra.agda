@@ -2,7 +2,7 @@ module enderton.algebra where
   open import Agda.Builtin.Equality using (_≡_;refl)
   open import Data.Empty using (⊥;⊥-elim)
   open import Relation.Nullary using (¬_)
-  open import Relation.Nullary.Negation using (contraposition)
+  open import Relation.Nullary.Negation using (contraposition;¬∃⟶∀¬;∀⟶¬∃¬)
   open import Data.Sum.Base using (_⊎_;inj₁;inj₂;reduce)
   open import Data.Product
     using (proj₁;proj₂;_×_;Σ;∃;∄;_,_;
@@ -205,8 +205,6 @@ module enderton.algebra where
       ... | inj₂ x∈B | inj₂ x∈C = x∈A⊎x∈B∩C→x∈A∪B∩C
         (inj₂ (proj₂ (proj₂ (B ∩ C) x) (x∈B , x∈C)))
 
-  -- De Morgan's Laws.
-
   x∉A∪B→x∉A : ∀ {A B x}
     → x ∉ proj₁ (A ∪ B) → x ∉ A
   x∉A∪B→x∉A {A} {B} {x} x∉A∪B x∈A = x∉A∪B
@@ -228,6 +226,7 @@ module enderton.algebra where
   ... | inj₁ x∈A = x∉A x∈A
   ... | inj₂ x∈B = x∉B x∈B
 
+  -- De Morgan's Laws.
   C─A∪B≡C─A∩C─B : ∀ A B C
     → proj₁ (C ─ proj₁ (A ∪ B)) ≡ proj₁ (proj₁ (C ─ A) ∩ proj₁ (C ─ B))
   C─A∪B≡C─A∩C─B A B C = extensionality _ _ λ x → lemma→ x , lemma← x
@@ -371,7 +370,11 @@ module enderton.algebra where
   A⊆B→C⊆D→A∪C⊆B∪D {A} {B} {C} {D} A⊆B C⊆D = A⊆B→B⊆C→A⊆C
     {B = proj₁ (B ∪ C)} (A⊆B→A∪C⊆B⊆C A⊆B) (B⊆C→A∪B⊆A∪C C⊆D)
 
+  C─A⊆C : ∀ C A → proj₁ (C ─ A) ⊆ C
+  C─A⊆C C A {x} x∈C─A = proj₁ (proj₁ (proj₂ (C ─ A) _) x∈C─A)
+
   -- More distributive laws.
+
   A∩⋃B≡⋃[t∈powA∩⋃B∣∃X∈B×t≡A∩X] : ∀ A B
     → proj₁ (A ∩ proj₁ (⋃ B))
       ≡ proj₁ (⋃ (proj₁
@@ -475,9 +478,145 @@ module enderton.algebra where
       ... | A∪b∈powA∪⋃B , b , b∈B , refl
           | b∈B→x∈b = proj₂ (proj₂ (A ∪ b) x) (inj₂ (b∈B→x∈b _ b∈B))
 
+  x∉⋃A→a∈A→x∉a : ∀ {x A a}
+    → x ∉ proj₁ (⋃ A) → a ∈ A → x ∉ a
+  x∉⋃A→a∈A→x∉a {x} {A} {a} x∉proj₁⋃A a∈A x∈a =
+    x∉proj₁⋃A (proj₂ (proj₂ (⋃ A) _) (a , a∈A , x∈a))
+
+  ∃a∈A→∃z∈[t∈powC∣∃X∈A×t≡C─X] : ∀ A C
+    → (∃[ a ] a ∈ A)
+    → ∃[ z ] z ∈ proj₁ [ t ∈ proj₁ (pow C) ∣ ∃[ X ] X ∈ A × t ≡ proj₁ (C ─ X) ]
+  ∃a∈A→∃z∈[t∈powC∣∃X∈A×t≡C─X] A C (a , a∈A) =
+    proj₁ (C ─ a)
+    , proj₂ (proj₂
+      [ t ∈ proj₁ (pow C)
+        ∣ ∃[ X ] X ∈ A × t ≡ proj₁ (C ─ X) ] _)
+        (proj₂ (proj₂ (pow C) _) (C─A⊆C _ _) , a , a∈A , refl)
+
+  -- General De Morgan.
+  
+  C─⋃A≡⋂[t∈powC∣∃X∈A×t≡C─X] : ∀ C A (∃a∈A : ∃[ a ] a ∈ A)
+    → proj₁ (C ─ proj₁ (⋃ A))
+      ≡ proj₁ (⋂ (proj₁ [ t ∈ proj₁ (pow C)
+        ∣ ∃[ X ] X ∈ A × t ≡ proj₁ (C ─ X) ])
+        (∃a∈A→∃z∈[t∈powC∣∃X∈A×t≡C─X] _ _ ∃a∈A))
+  C─⋃A≡⋂[t∈powC∣∃X∈A×t≡C─X] C A ∃a∈A = extensionality _ _ λ x → lemma→ x , lemma← x
+    where
+      lemma→ : ∀ x
+        → x ∈ proj₁ (C ─ proj₁ (⋃ A))
+        → x ∈ proj₁ (⋂ (proj₁
+          [ t ∈ proj₁ (pow C)
+          ∣ ∃[ X ] X ∈ A × t ≡ proj₁ (C ─ X) ])
+          (∃a∈A→∃z∈[t∈powC∣∃X∈A×t≡C─X] _ _ ∃a∈A))
+      lemma→ x x∈C─⋃A
+        with proj₁
+          (proj₂ (C ─ proj₁ (⋃ A)) x)
+          x∈C─⋃A
+      ... | x∈C , x∉⋃A = proj₂
+        (proj₂ (⋂ (proj₁
+          [ t ∈ proj₁ (pow C)
+          ∣ ∃[ X ] X ∈ A × t ≡ proj₁ (C ─ X) ])
+          (∃a∈A→∃z∈[t∈powC∣∃X∈A×t≡C─X] _ _ ∃a∈A)) _)
+        λ c c∈[t∈powC∣∃X∈A×t≡C─X] → c∈[t∈powC∣∃X∈A×t≡C─X]→x∈c c∈[t∈powC∣∃X∈A×t≡C─X]
+        where
+          c∈[t∈powC∣∃X∈A×t≡C─X]→x∈c : ∀ {c}
+            → c ∈ proj₁ [ t ∈ proj₁ (pow C) ∣ ∃[ X ] X ∈ A × t ≡ proj₁ (C ─ X) ]
+            → x ∈ c
+          c∈[t∈powC∣∃X∈A×t≡C─X]→x∈c {c} c∈[t∈powC∣∃X∈A×t≡C─X]
+            with proj₁
+              (proj₂
+                [ t ∈ proj₁ (pow C)
+                  ∣ ∃[ X ] X ∈ A × t ≡ proj₁ (C ─ X) ] c)
+              c∈[t∈powC∣∃X∈A×t≡C─X]
+          ... | c∈powC , a , a∈A , refl = proj₂
+            (proj₂ (C ─ a) _) (x∈C , x∉⋃A→a∈A→x∉a x∉⋃A a∈A)
+      lemma← : ∀ x
+        → x ∈ proj₁ (⋂ (proj₁
+          [ t ∈ proj₁ (pow C)
+            ∣ ∃[ X ] X ∈ A × t ≡ proj₁ (C ─ X) ])
+            (∃a∈A→∃z∈[t∈powC∣∃X∈A×t≡C─X] _ _ ∃a∈A))
+        → x ∈ proj₁ (C ─ proj₁ (⋃ A))
+      lemma← x x∈⋂[t∈powC∣∃X∈A×t≡C─X]
+        with proj₁
+          (proj₂ (⋂ (proj₁
+          [ t ∈ proj₁ (pow C)
+          ∣ ∃[ X ] X ∈ A × t ≡ proj₁ (C ─ X) ])
+          (∃a∈A→∃z∈[t∈powC∣∃X∈A×t≡C─X] _ _ ∃a∈A)) x)
+          x∈⋂[t∈powC∣∃X∈A×t≡C─X]
+      ... | ∀z∈[t∈powC∣∃X∈A×t≡C─X]→x∈z = proj₂
+          (proj₂ (C ─ proj₁ (⋃ A)) _) (x∈C ∃a∈A , x∉⋃A)
+        where
+          ∀a∈A→x∈C─a : ∀ {a}
+            → a ∈ A → x ∈ proj₁ (C ─ a)
+          ∀a∈A→x∈C─a {a} a∈A = ∀z∈[t∈powC∣∃X∈A×t≡C─X]→x∈z
+            (proj₁ (C ─ a))
+            (proj₂ (proj₂
+              [ t ∈ proj₁ (pow C)
+                ∣ ∃[ X ] X ∈ A × t ≡ proj₁ (C ─ X) ] _)
+                (proj₂ (proj₂ (pow C) _) (C─A⊆C _ _)
+                , a , (a∈A , refl)))
+          x∈C : (∃[ a ] a ∈ A) → x ∈ C
+          x∈C (a , a∈A)
+            with proj₁ (proj₂ (C ─ a) _) (∀a∈A→x∈C─a a∈A)
+          ... | x∈C , _ = x∈C
+          x∉⋃A : x ∉ proj₁ (⋃ A)
+          x∉⋃A x∈⋃A with proj₁ (proj₂ (⋃ A) _) x∈⋃A
+          ... | a , a∈A , x∈a with proj₁ (proj₂ (C ─ a) _) (∀a∈A→x∈C─a a∈A)
+          ... | _ , x∉a = x∉a x∈a
+
+  C─⋂A≡⋃[t∈powC∣∃X∈A×t≡C─A] : ∀ C A (∃a∈A : ∃[ a ] a ∈ A)
+    → proj₁ (C ─ proj₁ (⋂ A ∃a∈A))
+      ≡ proj₁ (⋃ (proj₁ [ t ∈ proj₁ (pow C) ∣ ∃[ X ] X ∈ A × t ≡ proj₁ (C ─ X)]))
+  C─⋂A≡⋃[t∈powC∣∃X∈A×t≡C─A] C A ∃a∈A = extensionality _ _ λ x → (lemma→ x ∃a∈A) , {!!}
+    where
+      lemma→ : ∀ x (∃a∈A : ∃[ a ] a ∈ A)
+        → x ∈ proj₁ (C ─ proj₁ (⋂ A ∃a∈A))
+        → x ∈ proj₁ (⋃ (proj₁ [ t ∈ proj₁ (pow C) ∣ ∃[ X ] X ∈ A × t ≡ proj₁ (C ─ X)]))
+      lemma→ x (a , a∈A) x∈C─⋂A
+        with proj₁
+          (proj₂ (C ─ proj₁ (⋂ A (a , a∈A))) x)
+          x∈C─⋂A
+      ... | x∈C , x∉⋂A = proj₂
+        (proj₂
+          (⋃ (proj₁ [ t ∈ proj₁ (pow C)
+            ∣ ∃[ X ] X ∈ A × t ≡ proj₁ (C ─ X)])) _)
+        (_ , proj₂ (proj₂ [ t ∈ proj₁ (pow C)
+            ∣ ∃[ X ] X ∈ A × t ≡ proj₁ (C ─ X)] (proj₁ (C ─ a)))
+            (proj₂ (proj₂ (pow C) _) (C─A⊆C _ _) , a , a∈A , refl)
+            , proj₂ (proj₂ (C ─ a) _) (x∈C , {!!}))
+  
+
   -- Theorems that require excluded middle
   module lemmas-P⊎¬P
     (P⊎¬P : ∀ (P : Set) → P ⊎ ¬ P) where
+
+    ¬¬P→P : ∀ {P : Set} → ¬ ¬ P → P
+    ¬¬P→P {P} ¬¬P with P⊎¬P P
+    ... | inj₁ p = p
+    ... | inj₂ ¬P = ⊥-elim (¬¬P ¬P)
+
+    ¬P→¬Q⟶Q→P : ∀ {P Q : Set}
+      → (¬ P → ¬ Q) → Q → P
+    ¬P→¬Q⟶Q→P {P} {Q} ¬P→¬Q q
+      with P⊎¬P P
+    ... | inj₁ p = p
+    ... | inj₂ ¬P = ⊥-elim (¬P→¬Q ¬P q)
+
+    ¬P→Q⟶P×¬Q : ∀ {P Q : Set}
+      → ¬ (P → Q) → P × ¬ Q
+    ¬P→Q⟶P×¬Q {P} {Q} ¬P→Q
+      with P⊎¬P P | P⊎¬P Q
+    ... | inj₁ p | inj₁ q = ⊥-elim (¬P→Q λ _ → q)
+    ... | inj₁ p | inj₂ ¬Q = p , ¬Q
+    ... | inj₂ ¬P | inj₁ q = ⊥-elim (¬P→Q λ _ → q)
+    ... | inj₂ ¬P | inj₂ ¬Q = ⊥-elim (¬P→Q (¬P→¬Q⟶Q→P λ _ → ¬P))
+
+    ¬∀→∃¬ : ∀ {X : Set} {P : X → Set}
+      → (¬ (∀ (x : X) → P x)) → ∃[ x ] ¬ P x
+    ¬∀→∃¬ {X} {P} ¬∀ with P⊎¬P (∃[ x ] ¬ P x)
+    ... | inj₁ ∃¬P = ∃¬P
+    ... | inj₂ ¬∃¬P with ¬∃⟶∀¬ ¬∃¬P
+    ... | ∀¬P = ⊥-elim (¬∀ λ x → ¬¬P→P (∀¬P x))
 
     x∉A∩B→x∉A⊎x∉B : ∀ {A B x}
       → x ∉ proj₁ (A ∩ B) → x ∉ A ⊎ x ∉ B
@@ -487,6 +626,14 @@ module enderton.algebra where
     ... | inj₂ x∉B = inj₂ x∉B
     ... | inj₁ x∈B = ⊥-elim (x∉A∩B (proj₂ (proj₂ (A ∩ B) x) (x∈A , x∈B)))
 
+    x∉⋂A→∃a∈A×x∉a : ∀ {A x} {∃a∈A : ∃[ a ] a ∈ A}
+      → x ∉ proj₁ (⋂ A ∃a∈A) → ∃[ a ] a ∈ A × x ∉ a
+    x∉⋂A→∃a∈A×x∉a {A} {x} {∃a∈A} x∉⋂A
+      with contraposition (proj₂ (proj₂ (⋂ A ∃a∈A) x)) x∉⋂A
+    ... | ¬∀a∈A→a∈A with ¬∀→∃¬ ¬∀a∈A→a∈A
+    ... | a , ¬a∈A→x∈a = a , ¬P→Q⟶P×¬Q ¬a∈A→x∈a
+
+    -- De Morgan's Laws.
     C─A∩B≡C─A∪C─B : ∀ A B C
       → proj₁ (C ─ proj₁ (A ∩ B)) ≡ proj₁ (proj₁ (C ─ A) ∪ proj₁ (C ─ B))
     C─A∩B≡C─A∪C─B A B C = extensionality _ _ λ x → lemma→ x , lemma← x
