@@ -7,7 +7,7 @@ module enderton.exercises.ch2 where
     using (proj₁;proj₂;_×_;Σ;∃;∄;_,_;
       Σ-syntax;∃-syntax;∄-syntax)
   open import enderton.axioms using (set;_∈_;_⊆_;⋃;pow
-    ;extensionality;_↔_;_∩_;comprehension;⋂;_∪_
+    ;extensionality;_↔_;_∩_;comprehension;⋂;_∪_;_─_;_∉_
     ;comprehension-syntax;⟨_,_⟩;singleton;Theorem-2A)
 
   {-
@@ -157,3 +157,60 @@ module enderton.exercises.ch2 where
           x⊆⋃B {y} y∈x with proj₂ (⋃ B) y
           ... | _ , ∃[b]b∈x×y∈b→y∈⋃B =
             ∃[b]b∈x×y∈b→y∈⋃B (a , a∈B , x∈powa→x⊆a x∈powa y∈x)
+
+  -- Exercise 11.
+  
+  A∩B∪A─B⊆A : ∀ {A B}
+    → proj₁ (proj₁ (A ∩ B) ∪ proj₁ (A ─ B)) ⊆ A
+  A∩B∪A─B⊆A {A} {B} {x} x∈A∩B∪A─B
+    with proj₁
+      (proj₂ (proj₁ (A ∩ B) ∪ proj₁ (A ─ B))  _)
+      x∈A∩B∪A─B
+  ... | inj₁ x∈A∩B = proj₁ (proj₁ (proj₂ (A ∩ B) x) x∈A∩B)
+  ... | inj₂ x∈A─B = proj₁ (proj₁ (proj₂ (A ─ B) x) x∈A─B)
+
+  A∪B─A⊆A∪B : ∀ {A B}
+    → proj₁ (A ∪ proj₁ (B ─ A)) ⊆ proj₁ (A ∪ B)
+  A∪B─A⊆A∪B {A} {B} {x} x∈A∪B─A
+    with proj₁
+      (proj₂ (A ∪ proj₁ (B ─ A)) _)
+      x∈A∪B─A
+  ... | inj₁ x∈A = proj₂ (proj₂ (A ∪ B) _) (inj₁ x∈A)
+  ... | inj₂ x∈B─A = proj₂
+    (proj₂ (A ∪ B) _)
+    (inj₂ (proj₁ (proj₁ (proj₂ (B ─ A) x) x∈B─A)))
+
+  -- Exercises needing exluded middle.
+  module exer-exm (P⊎¬P : ∀ (P : Set) → P ⊎ ¬ P) where
+
+    -- Exercise 11.
+    
+    A≡A∩B∪A─B : ∀ A B
+      → A ≡ proj₁ (proj₁ (A ∩ B) ∪ proj₁ (A ─ B))
+    A≡A∩B∪A─B A B = extensionality _ _ λ x → lemma→ x , A∩B∪A─B⊆A {x = x}
+      where
+        lemma→ : ∀ x
+          → x ∈ A → x ∈ proj₁ (proj₁ (A ∩ B) ∪ proj₁ (A ─ B))
+        lemma→ x x∈A with P⊎¬P (x ∈ B)
+        ... | inj₁ x∈B = proj₂
+          (proj₂ (proj₁ (A ∩ B) ∪ proj₁ (A ─ B)) _)
+          (inj₁ (proj₂ (proj₂ (A ∩ B) x) (x∈A , x∈B)))
+        ... | inj₂ x∉B = proj₂
+          (proj₂ (proj₁ (A ∩ B) ∪ proj₁ (A ─ B)) _)
+          (inj₂ (proj₂ (proj₂ (A ─ B) x) (x∈A , x∉B)))
+
+    A∪B≡A∪B─A : ∀ A B
+      → proj₁ (A ∪ B) ≡ proj₁ (A ∪ proj₁ (B ─ A))
+    A∪B≡A∪B─A A B = extensionality _ _ λ x → lemma→ x , A∪B─A⊆A∪B {x = x}
+      where
+        lemma→ : ∀ x
+          → x ∈ proj₁ (A ∪ B) → x ∈ proj₁ (A ∪ proj₁ (B ─ A))
+        lemma→ x x∈A∪B with P⊎¬P (x ∈ A)
+        ... | inj₁ x∈A = proj₂ (proj₂ (A ∪ proj₁ (B ─ A)) _) (inj₁ x∈A)
+        ... | inj₂ x∉A with proj₁
+          (proj₂ (A ∪ B) _)
+          x∈A∪B
+        ... | inj₁ x∈A = ⊥-elim (x∉A x∈A)
+        ... | inj₂ x∈B = proj₂
+          (proj₂ (A ∪ proj₁ (B ─ A)) _)
+          (inj₂ (proj₂ (proj₂ (B ─ A) _) (x∈B , x∉A)))
