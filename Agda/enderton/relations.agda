@@ -1,5 +1,6 @@
 module enderton.relations where
   open import Agda.Builtin.Equality using (_≡_;refl)
+  open import Relation.Binary.PropositionalEquality.Core using (_≢_;sym;cong)
   open import Data.Empty using (⊥;⊥-elim)
   open import Relation.Nullary using (¬_)
   open import Relation.Nullary.Negation using (contraposition;¬∃⟶∀¬;∀⟶¬∃¬)
@@ -46,6 +47,16 @@ module enderton.relations where
       A≡B with proj₁ (proj₂ (singleton B) _) A∈singletonB
       ... | refl = refl
 
+  ⟨A,B⟩⊆⟨B,A⟩ : ∀ A B → proj₁ ⟨ A , B ⟩ ⊆ proj₁ ⟨ B , A ⟩
+  ⟨A,B⟩⊆⟨B,A⟩ A B {x} x∈⟨A,B⟩
+    with proj₁ (proj₂ ⟨ A , B ⟩ _) x∈⟨A,B⟩
+  ... | inj₁ refl = proj₂ (proj₂ ⟨ B , A ⟩ _) (inj₂ refl)
+  ... | inj₂ refl = proj₂ (proj₂ ⟨ B , A ⟩ _) (inj₁ refl)
+
+  ⟨A,B⟩≡⟨B,A⟩ : ∀ A B → proj₁ ⟨ A , B ⟩ ≡ proj₁ ⟨ B , A ⟩
+  ⟨A,B⟩≡⟨B,A⟩ A B = extensionality
+    _ _ λ x → (⟨A,B⟩⊆⟨B,A⟩ A B {x}) , (⟨A,B⟩⊆⟨B,A⟩ B A {x})
+
   singletonA≡⟨B,C⟩→A≡B×A≡C : ∀ {A B C}
     → proj₁ (singleton A) ≡ proj₁ ⟨ B , C ⟩ → A ≡ B × A ≡ C
   singletonA≡⟨B,C⟩→A≡B×A≡C {A} {B} {C} singletonA≡⟨B,C⟩ = A≡B , A≡C
@@ -63,7 +74,7 @@ module enderton.relations where
     
   ⟨A,B⟩≡⟨C,D⟩→A≡C×B≡D⊎A≡D×B≡C : ∀ {A B C D}
     → proj₁ ⟨ A , B ⟩ ≡ proj₁ ⟨ C , D ⟩ → A ≡ C × B ≡ D ⊎ A ≡ D × B ≡ C
-  ⟨A,B⟩≡⟨C,D⟩→A≡C×B≡D⊎A≡D×B≡C {A} {B} {C} {D} ⟨A,B⟩≡⟨C,D⟩ = {!!}
+  ⟨A,B⟩≡⟨C,D⟩→A≡C×B≡D⊎A≡D×B≡C {A} {B} {C} {D} ⟨A,B⟩≡⟨C,D⟩ = help
     where
       A∈⟨A,B⟩ = proj₂ (proj₂ ⟨ A , B ⟩ A) (inj₁ refl)
       A∈⟨C,D⟩ = proj₁ (A≡B→x∈A↔x∈B ⟨A,B⟩≡⟨C,D⟩ A) A∈⟨A,B⟩
@@ -110,7 +121,7 @@ module enderton.relations where
           
   <u,v>≡<x,y>→v≡y : ∀ {u v x y}
     → < u , v > ≡ < x , y > → v ≡ y
-  <u,v>≡<x,y>→v≡y {u} {v} {x} {y} <u,v>≡<x,y> = {!!}
+  <u,v>≡<x,y>→v≡y {u} {v} {x} {y} <u,v>≡<x,y> = v≡y
     where
       ⟨u,v⟩∈<u,v> = ⟨A,B⟩∈<A,B> u v
       ⟨u,v⟩∈<x,y> = proj₁
@@ -118,30 +129,47 @@ module enderton.relations where
         ⟨u,v⟩∈<u,v>
       v≡y : v ≡ y
       v≡y with x∈<A,B>→x≡singletonA⊎x≡⟨A,B⟩ ⟨u,v⟩∈<x,y>
-      ... | inj₁ ⟨u,v⟩≡singletonx = {!!}
+      ... | inj₁ ⟨u,v⟩≡singletonx = v≡y'
+        where
+          v≡y' : v ≡ y
+          v≡y' with singletonA≡⟨B,C⟩→A≡B×A≡C (sym ⟨u,v⟩≡singletonx)
+          ... | refl , refl = u≡y
+            where
+              ⟨u,y⟩∈<u,y> = ⟨A,B⟩∈<A,B> u y
+              ⟨u,y⟩∈<u,u> = proj₂
+                (A≡B→x∈A↔x∈B <u,v>≡<x,y> _)
+                ⟨u,y⟩∈<u,y>
+              u≡y : u ≡ y
+              u≡y with x∈<A,B>→x≡singletonA⊎x≡⟨A,B⟩ ⟨u,y⟩∈<u,u>
+              ... | inj₁ ⟨u,y⟩≡singletonu = proj₂
+                (singletonA≡⟨B,C⟩→A≡B×A≡C (sym ⟨u,y⟩≡singletonu))
+              ... | inj₂ ⟨u,y⟩≡⟨u,u⟩
+                with ⟨A,B⟩≡⟨C,D⟩→A≡C×B≡D⊎A≡D×B≡C ⟨u,y⟩≡⟨u,u⟩
+              ... | inj₁ (refl , refl) = refl
+              ... | inj₂ (refl , refl) = refl
       ... | inj₂ ⟨u,v⟩≡⟨x,y⟩
         with ⟨A,B⟩≡⟨C,D⟩→A≡C×B≡D⊎A≡D×B≡C ⟨u,v⟩≡⟨x,y⟩
       ... | inj₁ (_ , v≡y) = v≡y
-      ... | inj₂ (refl , refl) = {!!}
+      ... | inj₂ (refl , refl) = v≡u
+        where
+          singletonu∈<u,v> = singletonA∈<A,B> u v
+          singletonu∈<v,u> = proj₁ (A≡B→x∈A↔x∈B <u,v>≡<x,y> _) singletonu∈<u,v>
+          v≡u : v ≡ u
+          v≡u with x∈<A,B>→x≡singletonA⊎x≡⟨A,B⟩ singletonu∈<v,u>
+          ... | inj₁ singletonu≡singletonv =
+            sym (singletonA≡singletonB→A≡B singletonu≡singletonv)
+          ... | inj₂ singletonu≡⟨v,u⟩
+            with singletonA≡⟨B,C⟩→A≡B×A≡C singletonu≡⟨v,u⟩
+          ... | refl , refl = refl
 
   <u,v>≡<x,y>→u≡x×v≡y : ∀ {u v x y}
     → < u , v > ≡ < x , y > → u ≡ x × v ≡ y
-  <u,v>≡<x,y>→u≡x×v≡y {u} {v} {x} {y} <u,v>≡<x,y> = {!!}
-  {-
-     (extensionality _ _ λ z → {!!} , {!!})
-     , (extensionality _ _ λ z → {!!} , {!!})
-        where
-          z∈u→z∈x : ∀ z → z ∈ u → z ∈ x
-          z∈u→z∈x z z∈u
-            with A≡B→x∈A↔x∈B <u,v>≡<x,y> <u,v>≡<x,y> = {!!}
-          z∈x→z∈u : ∀ z → z ∈ x → z ∈ u
-          z∈x→z∈u z z∈x = {!!}
-          z∈v→z∈y : ∀ z → z ∈ v → z ∈ y
-          z∈v→z∈y z z∈v = {!!}
-          z∈y→z∈v : ∀ z → z ∈ y → z ∈ v
-          z∈y→z∈v z z∈y = {!!} -}
+  <u,v>≡<x,y>→u≡x×v≡y {u} {v} {x} {y} <u,v>≡<x,y>
+    with <u,v>≡<x,y>→u≡x <u,v>≡<x,y>
+      | <u,v>≡<x,y>→v≡y <u,v>≡<x,y>
+  ... | u≡x | v≡y = u≡x , v≡y
 
   <u,v>≡<x,y>↔u≡x×v≡y : ∀ u v x y
     → < u , v > ≡ < x , y > ↔ u ≡ x × v ≡ y
-  <u,v>≡<x,y>↔u≡x×v≡y u v x y = {!!} , (λ { (refl , refl) → refl })
-      
+  <u,v>≡<x,y>↔u≡x×v≡y u v x y =
+    <u,v>≡<x,y>→u≡x×v≡y , (λ { (refl , refl) → refl })  
