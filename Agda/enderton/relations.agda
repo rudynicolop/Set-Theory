@@ -172,4 +172,73 @@ module enderton.relations where
   <u,v>≡<x,y>↔u≡x×v≡y : ∀ u v x y
     → < u , v > ≡ < x , y > ↔ u ≡ x × v ≡ y
   <u,v>≡<x,y>↔u≡x×v≡y u v x y =
-    <u,v>≡<x,y>→u≡x×v≡y , (λ { (refl , refl) → refl })  
+    <u,v>≡<x,y>→u≡x×v≡y , (λ { (refl , refl) → refl })
+
+  x∈C→singletonx⊆C : ∀ {C x}
+    → x ∈ C → proj₁ (singleton x) ⊆ C
+  x∈C→singletonx⊆C {C} {x} x∈C {z} z∈singletonx
+    with proj₁ (proj₂ (singleton x) _) z∈singletonx
+  ... | refl = x∈C
+
+  x∈C→y∈C→⟨x,y⟩⊆C : ∀ {C x y}
+    → x ∈ C → y ∈ C → proj₁ ⟨ x , y ⟩ ⊆ C
+  x∈C→y∈C→⟨x,y⟩⊆C {C} {x} {y} x∈C y∈C {z} z∈⟨x,y⟩
+    with proj₁ (proj₂ ⟨ x , y ⟩ _) z∈⟨x,y⟩
+  ... | inj₁ refl = x∈C
+  ... | inj₂ refl = y∈C
+
+  -- Lemma 3B.
+  x∈C→y∈C→<x,y>∈powpowC : ∀ {x y C}
+    → x ∈ C → y ∈ C → < x , y > ∈ proj₁ (pow (proj₁ (pow C)))
+  x∈C→y∈C→<x,y>∈powpowC {x} {y} {C} x∈C y∈C = proj₂
+    (proj₂ (pow (proj₁ (pow C))) _)
+    λ z∈<x,y> → z∈<x,y>→z∈powC z∈<x,y>
+      where
+        z∈<x,y>→z∈powC : ∀ {z}
+          → z ∈ < x , y > → z ∈ proj₁ (pow C)
+        z∈<x,y>→z∈powC {z} z∈<x,y>
+          with x∈<A,B>→x≡singletonA⊎x≡⟨A,B⟩ z∈<x,y>
+        ... | inj₁ refl = proj₂ (proj₂ (pow C) _) (x∈C→singletonx⊆C x∈C)
+        ... | inj₂ refl = proj₂ (proj₂ (pow C) _) (x∈C→y∈C→⟨x,y⟩⊆C x∈C y∈C)
+
+  -- Corallary 3C. Cartesian Product
+  [_×_] : ∀ A B → ∃[ C ] ∀ c → c ∈ C ↔ ∃[ x ] ∃[ y ] x ∈ A × y ∈ B × c ≡ < x , y >
+  [ A × B ] = (proj₁ [w∈powpowA∪B∣w≡<x,y>×x∈A×y∈B])
+    , λ c → lemma→ c , lemma← c
+    where
+      [w∈powpowA∪B∣w≡<x,y>×x∈A×y∈B] =
+        [ w ∈ proj₁ (pow (proj₁ (pow (proj₁ (A ∪ B)))))
+          ∣ ∃[ x ] ∃[ y ] w ≡ < x , y > × x ∈ A × y ∈ B ]
+      lemma→ : ∀ c
+        → c ∈ proj₁ [w∈powpowA∪B∣w≡<x,y>×x∈A×y∈B]
+        → ∃[ x ] ∃[ y ] x ∈ A × y ∈ B × c ≡ < x , y >
+      lemma→ c c∈[w∈powpowA∪B∣w≡<x,y>×x∈A×y∈B]
+        with proj₁
+          (proj₂ [w∈powpowA∪B∣w≡<x,y>×x∈A×y∈B] _)
+          c∈[w∈powpowA∪B∣w≡<x,y>×x∈A×y∈B]
+      ... | c∈powpowA∪B , a , b , refl , a∈A , b∈B = a , (b , a∈A , b∈B , refl)
+      lemma← : ∀ c
+        → ∃[ x ] ∃[ y ] x ∈ A × y ∈ B × c ≡ < x , y >
+        → c ∈ proj₁ [w∈powpowA∪B∣w≡<x,y>×x∈A×y∈B]
+      lemma← .(proj₁ ⟨ proj₁ ⟨ a , a ⟩ , proj₁ ⟨ a , b ⟩ ⟩) (a , b , a∈A , b∈B , refl) =
+        proj₂ (proj₂ [w∈powpowA∪B∣w≡<x,y>×x∈A×y∈B] _)
+          (x∈C→y∈C→<x,y>∈powpowC
+            (proj₂ (proj₂ (A ∪ B) _) (inj₁ a∈A))
+            (proj₂ (proj₂ (A ∪ B) _) (inj₂ b∈B))
+          , a , (b , (refl , (a∈A , b∈B))))
+
+  -- Lemma 3D.
+  <x,y>∈A→x∈⋃⋃A×y∈⋃⋃A : ∀ {A x y}
+    → < x , y > ∈ A
+    → x ∈ proj₁ (⋃ (proj₁ (⋃ A))) × y ∈ proj₁ (⋃ (proj₁ (⋃ A)))
+  <x,y>∈A→x∈⋃⋃A×y∈⋃⋃A {A} {x} {y} <x,y>∈A =
+    proj₂
+      (proj₂ (⋃ (proj₁ (⋃ A))) _)
+      (proj₁ (singleton x)
+      , proj₂ (proj₂ (⋃ A) _) (< x , y > , <x,y>∈A , singletonA∈<A,B> _ _)
+      , proj₂ (proj₂ (singleton x) _) refl)
+    , proj₂
+      (proj₂ (⋃ (proj₁ (⋃ A))) _)
+      (proj₁ ⟨ x , y ⟩
+      , proj₂ (proj₂ (⋃ A) _) (< x , y > , <x,y>∈A , ⟨A,B⟩∈<A,B> _ _)
+      , proj₂ (proj₂ ⟨ x , y ⟩ _) (inj₂ refl))
